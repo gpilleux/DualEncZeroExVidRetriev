@@ -49,7 +49,9 @@ Para el uso de los embeddings, es necesario extraer el vocabulario del training 
 
 **Video to Frames (V2F)**
 
-Los datos se pueden descargar ejecutando las celdas correspondientes del siguiente Colab (link a colab). En este mismo link, también se puede observar el análisis de los datos que mencioné con anterioridad.
+Los datos se pueden descargar ejecutando las celdas correspondientes del siguiente [[Colab]]. En este mismo link, también se puede observar el análisis de los datos que mencioné con anterioridad.
+
+[Colab]: https://colab.research.google.com/drive/1JUQGNamMmAaJFmXqHoLISU4oQw3BEF4n
 
 Además, encontré el código de los Dataloaders que utilizan en el paper, también adjuntos en el link de Colab. 
 
