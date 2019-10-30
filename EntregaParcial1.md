@@ -1,7 +1,8 @@
 # Dual Encoding for Zero-Example Video Retrieval
 ## Descripción detallada del problema
-Descripción detallada del problema que enfrenta el artículo: deben indicar la motivación del artículo, el problema que trata de resolver, por qué el problema es relevante y definirlo como un problema de Aprendizaje de Máquina (definido como input y output).
+
 ### Motivación
+
 La motivación del artículo es poder crear un modelo que sea capaz de codificar palabras e imágenes bajo una misma representación sin la necesidad de extraer conceptos relevantes que  generan relaciones entre ambos contextos. En otras palabras, el modelo debe ser capaz de entender la semántica entre ambos dominios a partir de un método libre de contexto.
 
 Esto resulta ser interesante al momento de extrapolar este problema, ya que entrega evidencia que se pueden relacionar dos dominios distintos sin la necesidad de extraer características relevantes de alguno de los dos, teniendo en cuenta que se considera la variable temporal entre ambos dominios.
@@ -13,90 +14,167 @@ La hipótesis del artículo es que dado un video o una query, en primera instanc
 
 [1]: https://arxiv.org/pdf/1809.06181.pdf
 
-El artículo tiene suma **relevancia** al cambiar el paradigma de los modelos basados en conceptos, los cuales automáticamente detectan los conceptos relevantes y los asocian a un evento en particular. Para estos tipos de modelos se tiene la dificultad de escoger los conceptos para poder entrenarlos, ya que no es tarea simple escoger conceptos que se puedan detectar y además representar a ambos dominios simultáneamente.
+### Relevancia
+El artículo tiene suma **relevancia** al cambiar el paradigma de los modelos basados en conceptos, los cuales automáticamente detectan los conceptos relevantes y los asocian a un evento en particular. Para estos tipos de modelos se tiene la dificultad de escoger los conceptos para poder entrenarlos, ya que no es tarea simple escoger conceptos que se puedan detectar y además representar en ambos dominios simultáneamente.
+
+### Planteamiento como problema de Aprendizaje de Máquina
 
 Este problema se puede definir según un problema de ***Aprendizaje de Máquina*** de la siguiente manera. Existen dos modalidades de inputs con sus respectivas modalidades de outputs.
 
-Para la primera modalidad, el input es una oración en lenguaje natural, es decir, una composición de palabras. En este caso, el output es un set de frames de video, o un conjunto de imágenes, que representan la semántica del input.
+La primera modalidad es el **video-to-text**, donde el input es un set de frames de video, o un conjunto de imágenes. En este caso, el output es una oración en lenguaje natural, es decir, una composición de palabras que describe semánticamente el fragmento de video que fue entregado como input.
 
-La segunda modalidad es el caso en que el input está dado por un set de frames de video y el output es una oración en lenguaje natural que describe el fragmento de video que fue entregado como input.
+La segunda modalidad o **text-to-video** es el caso en que el input es una oración en lenguaje natural y el output es un set de frames de video que son descrito semánticamente por el input.
 
-Finalmente, quiero dejar en claro que la réplica del paper se hará en primera instancia con la primera modalidad recién descrita y realizar la segunda modalidad si y solo si es directo llevarlo a cabo una vez completada la primera.
 
 ## Descripción detallada de las métricas
-Deben describir las métricas que usan en el artículo para medir el desempeño de la solución. No solo deben enumerar los nombres de las métricas si no investigar a qué se refiere cada una y definirla formalmente (muchos artículos usan métricas que van mucho más allá de acierto o precisión). Deben además decidir qué métricas son las que usarán ustedes en su replicación. Algunos artículos usan muchas métricas distintas. En su caso, basta con que seleccionen un par de las mencionadas en el artículo.
-**Recall (R@num)**
-**Med r**
-**mAP**
-**infAP**
 
+Las métricas de evaluación que utilizaré son las mismas que utilizaron en el paper y que describiré a continuación.
+
+1. **Recall@K (R@K, K = 1, 5, 10):** Porcentaje de obtener al menos un elemento correctamente clasificado dentro de los K elementos con mayor probabilidad de aserción. El modelo tiene un **mejor** desempeño a **mayor R@K**.
+2. **Suma de Recalls:** Debido a que se evaluan ambas modalidades, se tienen más posibles respuestas correctas para la modalidad *video-to-text*, ya que hay múltiples oraciones correctas para un video, mientras sólo hay un video correcto para cada oración. Debido a esto, para tener una comparación más fiable, se considera la suma de todos los recalls (R@K, para K = 1, 5, 10) de ambas modalidades.
+3. **[Median rank (Med r)]:** Es la mediana del rank. El i-ésimo rank se calcula como el error mínimo de un conjunto de errores considerando los primeros *i* elementos. A grandes rasgos, sirve para ignorar *outlayers* que puedan alterar el desempeño del modelo (ya sea para bien o para mal). El modelo tiene un **mejor** desempeño a **menor Med r**.
+4. **Mean Average Precision (mAP):** Es el promedio de los Average Precision (AP) calculado para cada clase. El AP se calcula como el área bajo la curva de Precision v/s Recall. En este contexto, considerando la modalidad *video-to-text*, la clase está dada por todas las oraciones del dataset y con la modalidad *text-to-video*, la clase se representa como todos los videos.
+
+[Median rank (Med r)]: [https://www.bmartin.cc/pubs/16aur/index.html](https://www.bmartin.cc/pubs/16aur/index.html)
 
 ## Descripción de los datos utilizados
-Deben investigar qué datos usaron los autores para medir la eficacia de su solución, deben descargarlos para poder analizarlos, describirlos (tamaño, tipo de datos, composición, etc.) y, siempre que sea posible, dejarlos en su repositorio, o de otra forma indicar cómo se deben descargar y procesar. Como plus, deben construir un DataSet y un DataLoader para los datos (o buscar si es que existe alguno disponible en la Web).
-
-A partir del código que se encuentra en el github del paper (link), logré identificar el dataset que utilizaron para entrenar y probar el modelo dual encoding, al igual que los embeddings necesarios.
 
 **MSR-VTT Dataset**
-Se utiliza el dataset MSR-VTT que contiene 10.000 *video clips* con 200.000 *oraciones de lenguaje natural* que describen el contenido de los videos. En promedio, se tienen 20 oraciones por video. La partición que se realiza para los datos de training, validation y testing son 
-6.513, 497, 2.990 respectivamente.
+Se utiliza el dataset MSR-VTT que contiene 10.000 *video clips* con 200.000 *oraciones de lenguaje natural* que describen el contenido de los videos, también denominadas *captions*. En promedio, se tienen 20 *captions* por video.
 
+La partición que utilizaron para los datos de training, validation y testing son 6.513, 497, 2.990 videos respectivamente.
 
+El modo de uso de cada video es mediante la agrupación de *n* frames que representan 0.5 segundos del video. Luego, se extraen las características o *features* de cada frame a través de una *red convolucional* pre-entrenada denominada **ImageNet CNN** y son estos grupos de *frames* que se utilizan para realizar distintos cálculos que vienen siendo los **encodings globales**, **encodings de la *consciencia* temporal** y **encodings de mejoras locales.**
+
+A fin de cuentas, los datos que se tienen son los *features* de cada *frame* de los 10.000 videos en un archivo de formato binario (.bin) y los *captions* están en formato de texto (.txt).
 
 **Vocabulario/Bag of Words (BoW)**
-Para el uso de los embeddings, es necesario extraer el vocabulario del training set. Para esto, ejecuté el script *vocab.py* del repositorio el cual generó una vocabulario con **cantidad** palabras.
+Para trabajar con texto se utilizaron word embeddings y debido a esto es necesario extraer el vocabulario del training set. Ejecuté el script *vocab.py* del repositorio el cual generó un vocabulario de **7.807** palabras.
 
 **WordtoVec (W2V)**
+Se trabaja con el word embedding pre-entrenado W2V que posee 1.743.364 instancias de palabras, cada una de dimensión 500. 
 
-**Video to Frames (V2F)**
-
-Los datos se pueden descargar ejecutando las celdas correspondientes del siguiente [[Colab]]. En este mismo link, también se puede observar el análisis de los datos que mencioné con anterioridad.
+Los datos se pueden descargar ejecutando las celdas correspondientes del siguiente [Colab]. En este mismo ambiente se pueden observar los análisis de los datos que mencioné con anterioridad.
 
 [Colab]: https://colab.research.google.com/drive/1JUQGNamMmAaJFmXqHoLISU4oQw3BEF4n
 
-Además, encontré el código de los Dataloaders que utilizan en el paper, también adjuntos en el link de Colab. 
-
-(Eliminar estos de acá abajo)
-**TRECVID Ad-Hoc Video Search task (last 2 years) **.
-4,593 Internet Archive videos with
-duration ranging from 6.5 min to 9.5 min and a mean du-
-ration of almost 7.8 min.
-Como no tiene set de entrenamiento, se entrena con **MSR-VTT** y **TGIF**.
-100K animated GIFs and 120K sentences describing visual
-content of the GIFs
-**MSVD**. for cross-dataset generalization
-**MPII-MD**. cross-domain generalization
-
+Además, encontré el código de los Dataloaders que utilizaron en el paper, también adjuntos en el link de Colab. 
 
 ## Descripción de la arquitectura
-Deben describir la arquitectura de Deep Learning usada por los autores para resolver el problema. Idealmente entender y enumerar las fórmulas usadas en la arquitectura. Si las fórmulas o la arquitectura son muy complicadas, pueden sólo incluir una descripción de alto nivel, pero procuren juntarse con su tutor para que los guíe en el entendimiento de la arquitectura.
-La arquitectura que se describirá es para el caso en que el input es una oración de lenguaje natural y el output son frames del video correspondiente a lo descrito por el input (primera modalidad de la introducción).
+
+Como en el el paper hay dos modalidades de uso debido al *encoding dual*, existen dos arquitecturas, para las cuales haré una descripción de alto nivel seguido por la enumeración de las fórmulas.
+
+### Primera modalidad: video-to-text
 
 ```mermaid
 graph LR
-Input[Oración] --> OHE[One-hot encoding]
-OHE --> fs1[Lvl 1 Enc]
-OHE --> WE[Word Embedding]
-WE --> FGRU1[FGRU-1]
-WE --> FGRU2[FGRU-2]
-WE --> FGRUDOTS[...]
-WE --> FGRUN[FGRU-N]
-FGRU1 --> FGRU2
-FGRU2 --> FGRUDOTS
-FGRUDOTS --> FGRUN
+FRMS[Frames] --> FEAT[Features]
+FEAT --> FV1((fv1))
+FEAT --> FG1[FGRU-1]
+FG1 --> FGDOTS[...]
+FGDOTS --> FGN[FGRU-N]
 
-WE --> BGRU1[BGRU-1]
-WE --> BGRU2[BGRU-2]
-WE --> BGRUDOTS[...]
-WE --> BGRUN[BGRU-N]
-BGRUN --> BGRUDOTS
-BGRUDOTS --> BGRU2
-BGRU2 --> BGRU1
+FEAT --> BGN[BGRU-N]
+BGN --> BGDOTS[...]
+BGDOTS --> BG1[BGRU-1]
 
+FGN --> OutbiGRU[Output biGRU]
+FGDOTS --> OutbiGRU
+FG1 --> OutbiGRU
 
+BG1 --> OutbiGRU
+BGDOTS --> OutbiGRU
+BGN --> OutbiGRU
+
+OutbiGRU --> FV2((fv2))
+OutbiGRU --> CNN[CNN]
+CNN --> c2c3c4c5[c2,c3,c4,c5]
+c2c3c4c5 --> FV3((fv3))
+
+FV1 --> phiV((phiV))
+FV2 --> phiV((phiV))
+FV3 --> phiV((phiV))
 ```
 
+A partir de los frames de un video, se calculan sus *features*. El video queda representado por una secuencia de vectores característicos $\{v_1, v_2, ..., v_n\}$ donde $v_t$ representa los *features* del t-ésimo frame.
+Se entregan los *features* a una red recurrente bidireccional (biGRU), donde el output del t-ésimo elemento está dado por la concatenación de la GRU forward y GRU backward: $h_t = [\overrightarrow{h_t}, \overleftarrow{h_t}]$. Juntando todo, se obtiene un mapa característico $H = \{h_1, h_2, ..., h_n\}$.
+El mapa característico $H$ es entregado como input a una *red convolucional* (CNN) que utiliza filtros de tamaño $k=2,3,4,5$. El output final de esta red será definido como la concatenación de los outputs de la CNN para los distintos $k$.
+
+**Level 1. Global Encoding by Mean Pooling**
+$$f_v^{(1)} = \frac{1}{n}\sum_{t=1}^n v_t$$
+
+**Level 2. Temporal-Aware Encoding by biGRU**
+$$\overrightarrow{h_t} = \overrightarrow{GRU}(v_t,  \overrightarrow{h_{t-1}})$$
+$$\overleftarrow{h_t} = \overleftarrow{GRU}(v_{n+1-t},  \overleftarrow{h_{t-1}})$$
+
+$$f_v^{(2)} = \frac{1}{n}\sum_{t=1}^n h_t$$
+
+**Level 3. Local-Enhanced Encoding by biGRU-CNN**
+$$c_k = max-pooling(ReLU(Conv1d_{k,r}(H)))$$
+$$f_v^{(3)} = [c_2, c_3, c_4, c_5]$$
+$$\phi (v) = [f_v^{(1)}, f_v^{(2)}, f_v^{(3)}]$$
+
+### Segunda modalidad: text-to-video
+
+```mermaid
+graph LR
+SENTENCE[Frames] --> OHE[One-hot Encoding]
+OHE --> WE[Word embedding]
+OHE --> FS1((fs1))
+WE --> FG1[FGRU-1]
+FG1 --> FGDOTS[...]
+FGDOTS --> FGN[FGRU-N]
+
+WE --> BGN[BGRU-N]
+BGN --> BGDOTS[...]
+BGDOTS --> BG1[BGRU-1]
+
+FGN --> OutbiGRU[Output biGRU]
+FGDOTS --> OutbiGRU
+FG1 --> OutbiGRU
+
+BG1 --> OutbiGRU
+BGDOTS --> OutbiGRU
+BGN --> OutbiGRU
+
+OutbiGRU --> FS2((fs2))
+OutbiGRU --> CNN[CNN]
+CNN --> c2c3c4c5[c2,c3,c4]
+c2c3c4c5 --> FS3((fs3))
+
+FS1 --> phiS((phiS))
+FS2 --> phiS((phiS))
+FS3 --> phiS((phiS))
+```
+La arquitectura para la segunda modalidad es muy similiar a la primera con pequeños cambios.
+De partida, el input es una oración y se calculan los *vectores one-hot* de cada palabra que resulta en la secuencia $\{w_1, w_2, ..., w_m\}$ donde $w_t$ es el vector para la t-ésima palabra. El input del biGRU se calcula como la multiplicación del vector one-hot con una matriz del word embedding. Esta matriz es inicializada con word2vec ya mencionado. El output de la red biGRU es pasada como input a la red convolucional. Esta tiene la diferencia que se utilizan $k=2,3,4$ y el resultado final de la CNN es la concatenación de los $c_k$. Las fórmulas son idénticas, cambiando el argumento.
+
+**Level 1. Global Encoding by Mean Pooling**
+$$f_s^{(1)} = \frac{1}{n}\sum_{t=1}^n w_t$$
+
+**Level 2. Temporal-Aware Encoding by biGRU**
+$$\overrightarrow{h_t} = \overrightarrow{GRU}(w_t,  \overrightarrow{h_{t-1}})$$
+$$\overleftarrow{h_t} = \overleftarrow{GRU}(w_{n+1-t},  \overleftarrow{h_{t-1}})$$
+
+$$f_s^{(2)} = \frac{1}{n}\sum_{t=1}^n h_t$$
+
+**Level 3. Local-Enhanced Encoding by biGRU-CNN**
+$$c_k = max-pooling(ReLU(Conv1d_{k,r}(H)))$$
+$$f_s^{(3)} = [c_2, c_3, c_4]$$
+$$\phi (s) = [f_s^{(1)}, f_s^{(2)}, f_s^{(3)}]$$
+
+#### Common Space Learning
+Una vez calculado los $\phi (v)$ y $\phi (s)$, se deben proyectar en un espacio común para poder ser comparados. Para esto se utilizó un algoritmo *open source* y es el que tiene el mejor desempeño en la actualidad: [VSE++].
+VSE++ a grandes rasgos es una red neuronal con una Fully Connected (FC) layer que le agregaron Batch Normalization (BN).
+
+$$f(v) = BN(W_v \phi(v) + b_v)$$
+$$f(v) = BN(W_s \phi(s) + b_s)$$
+con $W_v$ y $W_s$ parametrizaciones de la capa FC.
+
+Cabe destacar que la *Dual Encoding Network* y la *Common Space Learning Network* se entrenan en conjunto de forma end-to-end, con la excepción de la CNN que extrae los *features* de los videos, la cual está pre-entrenada.
+
+[VSE++]: [https://github.com/fartashf/vsepp](https://github.com/fartashf/vsepp)
 
 ## Repositorio de código
 [Github Dual Encoding Zero-Example Video Retrieval](https://github.com/gpilleux/DualEncZeroExVidRetriev)
-
 
