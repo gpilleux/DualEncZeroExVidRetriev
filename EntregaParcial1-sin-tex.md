@@ -96,23 +96,23 @@ FV2 --> phiV((phiV))
 FV3 --> phiV((phiV))
 ```
 
-A partir de los frames de un video, se calculan sus *features*. El video queda representado por una secuencia de vectores característicos <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/4c10d924c78b9c3efa28c35b55686ee4.svg?invert_in_darkmode" align=middle width=99.65579745pt height=24.657534pt/> donde <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/3e3c6ee78813607a4d976d92c19dd36e.svg?invert_in_darkmode" align=middle width=12.9338583pt height=14.1552444pt/> representa los *features* del t-ésimo frame.
-Se entregan los *features* a una red recurrente bidireccional (biGRU), donde el output del t-ésimo elemento está dado por la concatenación de la GRU forward y GRU backward: <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/3c03e0aee10e1d311d4cf8fe67b0e238.svg?invert_in_darkmode" align=middle width=86.49222945pt height=42.0091485pt/>. Juntando todo, se obtiene un mapa característico <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/c8e77a4e9f9e6bb24b8fea77d228dfcd.svg?invert_in_darkmode" align=middle width=141.0825405pt height=24.657534pt/>.
-El mapa característico <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/7b9a0316a2fcd7f01cfd556eedf72e96.svg?invert_in_darkmode" align=middle width=14.99998995pt height=22.4657235pt/> es entregado como input a una *red convolucional* (CNN) que utiliza filtros de tamaño <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/28051ccbf325120643ec3577947ed99c.svg?invert_in_darkmode" align=middle width=85.7874798pt height=22.8310566pt/>. El output final de esta red será definido como la concatenación de los outputs de la CNN para los distintos <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/63bb9849783d01d91403bc9a5fea12a2.svg?invert_in_darkmode" align=middle width=9.07536795pt height=22.8310566pt/>.
+A partir de los frames de un video, se calculan sus *features*. El video queda representado por una secuencia de vectores característicos $\{v_1, v_2, ..., v_n\}$ donde $v_t$ representa los *features* del t-ésimo frame.
+Se entregan los *features* a una red recurrente bidireccional (biGRU), donde el output del t-ésimo elemento está dado por la concatenación de la GRU forward y GRU backward: $h_t = [\overrightarrow{h_t}, \overleftarrow{h_t}]$. Juntando todo, se obtiene un mapa característico $H = \{h_1, h_2, ..., h_n\}$.
+El mapa característico $H$ es entregado como input a una *red convolucional* (CNN) que utiliza filtros de tamaño $k=2,3,4,5$. El output final de esta red será definido como la concatenación de los outputs de la CNN para los distintos $k$.
 
 **Level 1. Global Encoding by Mean Pooling**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/ad3370fbe8330b49c16eed06d4be6f02.svg?invert_in_darkmode" align=middle width=105.3531138pt height=44.69878215pt/></p>
+$$f_v^{(1)} = \frac{1}{n}\sum_{t=1}^n v_t$$
 
 **Level 2. Temporal-Aware Encoding by biGRU**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/620d3e550e5dc08ef6b7659ba7e3b673.svg?invert_in_darkmode" align=middle width=142.83779895pt height=25.11416325pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/4f0fc6bcea68957c598b08621e20bcf3.svg?invert_in_darkmode" align=middle width=177.88172655pt height=25.11416325pt/></p>
+$$\overrightarrow{h_t} = \overrightarrow{GRU}(v_t,  \overrightarrow{h_{t-1}})$$
+$$\overleftarrow{h_t} = \overleftarrow{GRU}(v_{n+1-t},  \overleftarrow{h_{t-1}})$$
 
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/89226535db06dd304df80b21cda3526f.svg?invert_in_darkmode" align=middle width=106.85616315pt height=44.69878215pt/></p>
+$$f_v^{(2)} = \frac{1}{n}\sum_{t=1}^n h_t$$
 
 **Level 3. Local-Enhanced Encoding by biGRU-CNN**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/a8d132d8e3f4a685827e6561d947637e.svg?invert_in_darkmode" align=middle width=315.48738045pt height=17.0319402pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/dae4e2bc64a78ecfca2d8015ba5d8f35.svg?invert_in_darkmode" align=middle width=138.38667975pt height=19.5269943pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/a1331501ef473e3098d78aac19575bee.svg?invert_in_darkmode" align=middle width=159.1973493pt height=19.5269943pt/></p>
+$$c_k = max-pooling(ReLU(Conv1d_{k,r}(H)))$$
+$$f_v^{(3)} = [c_2, c_3, c_4, c_5]$$
+$$\phi (v) = [f_v^{(1)}, f_v^{(2)}, f_v^{(3)}]$$
 
 ### Segunda modalidad: text-to-video
 
@@ -147,29 +147,29 @@ FS2 --> phiS((phiS))
 FS3 --> phiS((phiS))
 ```
 La arquitectura para la segunda modalidad es muy similiar a la primera con pequeños cambios.
-De partida, el input es una oración y se calculan los *vectores one-hot* de cada palabra que resulta en la secuencia <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/88df58f39df554c6294fd4ec715469f9.svg?invert_in_darkmode" align=middle width=114.59595015pt height=24.657534pt/> donde <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/dde30cc90adc3d7de889d34c65ca6f25.svg?invert_in_darkmode" align=middle width=16.7343pt height=14.1552444pt/> es el vector para la t-ésima palabra. El input del biGRU se calcula como la multiplicación del vector one-hot con una matriz del word embedding. Esta matriz es inicializada con word2vec ya mencionado. El output de la red biGRU es pasada como input a la red convolucional. Esta tiene la diferencia que se utilizan <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/91557e8db62cbf55a9dc69e2c4544517.svg?invert_in_darkmode" align=middle width=70.26238725pt height=22.8310566pt/> y el resultado final de la CNN es la concatenación de los <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/0a5ec44b76d454790dd94ab5cfe77d12.svg?invert_in_darkmode" align=middle width=14.37983415pt height=14.1552444pt/>. Las fórmulas son idénticas, cambiando el argumento.
+De partida, el input es una oración y se calculan los *vectores one-hot* de cada palabra que resulta en la secuencia $\{w_1, w_2, ..., w_m\}$ donde $w_t$ es el vector para la t-ésima palabra. El input del biGRU se calcula como la multiplicación del vector one-hot con una matriz del word embedding. Esta matriz es inicializada con word2vec ya mencionado. El output de la red biGRU es pasada como input a la red convolucional. Esta tiene la diferencia que se utilizan $k=2,3,4$ y el resultado final de la CNN es la concatenación de los $c_k$. Las fórmulas son idénticas, cambiando el argumento.
 
 **Level 1. Global Encoding by Mean Pooling**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/cb438340102036e69cdf159da1e245a5.svg?invert_in_darkmode" align=middle width=109.1535555pt height=44.69878215pt/></p>
+$$f_s^{(1)} = \frac{1}{n}\sum_{t=1}^n w_t$$
 
 **Level 2. Temporal-Aware Encoding by biGRU**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/c57ab8e88ade5571d232f42141fc927d.svg?invert_in_darkmode" align=middle width=146.63824065pt height=25.11416325pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/aa6ca24b6205b3d4c8c41d996b2273bd.svg?invert_in_darkmode" align=middle width=181.68216825pt height=25.11416325pt/></p>
+$$\overrightarrow{h_t} = \overrightarrow{GRU}(w_t,  \overrightarrow{h_{t-1}})$$
+$$\overleftarrow{h_t} = \overleftarrow{GRU}(w_{n+1-t},  \overleftarrow{h_{t-1}})$$
 
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/5c3012ed4a19bc8f7897767008d50bb0.svg?invert_in_darkmode" align=middle width=106.85616315pt height=44.69878215pt/></p>
+$$f_s^{(2)} = \frac{1}{n}\sum_{t=1}^n h_t$$
 
 **Level 3. Local-Enhanced Encoding by biGRU-CNN**
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/a8d132d8e3f4a685827e6561d947637e.svg?invert_in_darkmode" align=middle width=315.48738045pt height=17.0319402pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/8675bf236ead9451e8e9aea38f36e19d.svg?invert_in_darkmode" align=middle width=116.59253265pt height=19.5269943pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/a7fbe78c0d1bdde608506de4bb394b56.svg?invert_in_darkmode" align=middle width=158.34498735pt height=19.5269943pt/></p>
+$$c_k = max-pooling(ReLU(Conv1d_{k,r}(H)))$$
+$$f_s^{(3)} = [c_2, c_3, c_4]$$
+$$\phi (s) = [f_s^{(1)}, f_s^{(2)}, f_s^{(3)}]$$
 
 #### Common Space Learning
-Una vez calculado los <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/62fde1b36cfaf9adb62a39f9800099f1.svg?invert_in_darkmode" align=middle width=31.13781825pt height=24.657534pt/> y <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/b4b27ff7613adcdb46ac7052b036e652.svg?invert_in_darkmode" align=middle width=30.2854563pt height=24.657534pt/>, se deben proyectar en un espacio común para poder ser comparados. Para esto se utilizó un algoritmo *open source* y es el que tiene el mejor desempeño en la actualidad: [VSE++].
+Una vez calculado los $\phi (v)$ y $\phi (s)$, se deben proyectar en un espacio común para poder ser comparados. Para esto se utilizó un algoritmo *open source* y es el que tiene el mejor desempeño en la actualidad: [VSE++].
 VSE++ a grandes rasgos es una red neuronal con una Fully Connected (FC) layer que le agregaron Batch Normalization (BN).
 
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/b892d31b76c72c41b63cb1808bd14607.svg?invert_in_darkmode" align=middle width=183.5864151pt height=16.438356pt/></p>
-<p align="center"><img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/625a67189fc89d9d453e4b370a218498.svg?invert_in_darkmode" align=middle width=181.16626935pt height=16.438356pt/></p>
-con <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/111bd6359756ad3da755b311934d08f4.svg?invert_in_darkmode" align=middle width=22.51339365pt height=22.4657235pt/> y <img src="https://rawgit.com/in	git@github.com:gpilleux/DualEncZeroExVidRetriev/None/svgs/caa83b409168bcbeb49ea01c63fe2dd8.svg?invert_in_darkmode" align=middle width=21.7295034pt height=22.4657235pt/> parametrizaciones de la capa FC.
+$$f(v) = BN(W_v \phi(v) + b_v)$$
+$$f(v) = BN(W_s \phi(s) + b_s)$$
+con $W_v$ y $W_s$ parametrizaciones de la capa FC.
 
 Cabe destacar que la *Dual Encoding Network* y la *Common Space Learning Network* se entrenan en conjunto de forma end-to-end, con la excepción de la CNN que extrae los *features* de los videos, la cual está pre-entrenada.
 
